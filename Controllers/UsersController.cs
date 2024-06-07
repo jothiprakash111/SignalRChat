@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SignalRChat.Models;
+using SignalRChat.Shared.Models.Dto;
 using WebApi.Helpers;
 
 namespace SignalRChat.Controllers
@@ -22,89 +23,30 @@ namespace SignalRChat.Controllers
         }
 
         // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Users>>> Getusers()
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> Getusers(string userId)
         {
-            return await _context.users.ToListAsync();
-        }
+            List<UserDto> userDtos = new List<UserDto>();
+            var users = await _context.Users.Where(x=>x.Id != userId).ToListAsync();
 
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Users>> GetUsers(int id)
-        {
-            var users = await _context.users.FindAsync(id);
-
-            if (users == null)
+            foreach (var user in users)
             {
-                return NotFound();
-            }
-
-            return users;
-        }
-
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUsers(int id, Users users)
-        {
-            if (id != users.UserId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(users).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsersExists(id))
+                var userdto = new UserDto()
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    ConnectionId = user.ConnectionId,
+                    IsOnline = user.IsOnline,
+                    
+                };
+
+                userDtos.Add(userdto);
             }
 
-            return NoContent();
+            return Ok(userDtos);
         }
 
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Users>> PostUsers(Users users)
-        {
-            users.CreatedOn = DateTime.UtcNow;
-            users.UpdatedOn = DateTime.UtcNow;
-            _context.users.Add(users);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUsers", new { id = users.UserId }, users);
-        }
 
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUsers(int id)
-        {
-            var users = await _context.users.FindAsync(id);
-            if (users == null)
-            {
-                return NotFound();
-            }
-
-            _context.users.Remove(users);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UsersExists(int id)
-        {
-            return _context.users.Any(e => e.UserId == id);
-        }
     }
 }

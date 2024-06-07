@@ -1,24 +1,25 @@
 ﻿namespace WebApi.Helpers;
 
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SignalRChat.Models;
+using System;
 
-public class DataContext : DbContext
+public class DataContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     protected readonly IConfiguration Configuration;
 
-    public DataContext(IConfiguration configuration)
+    public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
-        Configuration = configuration;
+
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        // connect to sqlite database
-        options.UseSqlite(Configuration.GetConnectionString("WebApiDatabase"));
+        base.OnModelCreating(builder);
     }
 
     public DbSet<ChatMessages> chatMessages { get; set; }
-    public DbSet<Users> users { get; set; }
     public DbSet<Groups> groups { get; set; }
 }
